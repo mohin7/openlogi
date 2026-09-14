@@ -12,7 +12,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.77"
 license = "GPL-3.0-or-later"
-repository = "https://github.com/mohin/openlogi"
+repository = "https://github.com/mohin7/openlogi"
 
 [workspace.dependencies]
 # Pure-Rust hidraw backend: no libudev, no C toolchain, no system deps.

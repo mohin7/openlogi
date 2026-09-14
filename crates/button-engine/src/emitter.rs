@@ -111,7 +111,8 @@ impl Emitter {
     }
 
     pub fn tap_key(&mut self, name: &str) -> Result<(), EmitError> {
-        let k = keys::key(name).ok_or_else(|| EmitError::BadAction(format!("unknown key '{name}'")))?;
+        let k = keys::key(name)
+            .ok_or_else(|| EmitError::BadAction(format!("unknown key '{name}'")))?;
         self.key_event(k, true)?;
         sleep(KEY_GAP);
         self.key_event(k, false)

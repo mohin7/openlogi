@@ -380,7 +380,9 @@ fn refresh(channels: &mut Vec<Channel>) -> Result<(), String> {
 
         // Receivers forward notifications only for the classes enabled here.
         if is_receiver {
-            if let Err(e) = hidpp1::enable_notifications(&mut transport, hidpp::protocol::RECEIVER_INDEX) {
+            if let Err(e) =
+                hidpp1::enable_notifications(&mut transport, hidpp::protocol::RECEIVER_INDEX)
+            {
                 debug!("enable_notifications: {e}");
             }
         }

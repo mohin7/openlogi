@@ -9,4 +9,5 @@ onlyBuiltDependencies:
   - vue-demi
 ignoredBuiltDependencies: []
 allowBuilds:
-  vue-demi: set this to true or false
+  esbuild: true
+  vue-demi: true

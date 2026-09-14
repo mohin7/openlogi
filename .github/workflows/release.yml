@@ -1,0 +1,165 @@
+name: Release
+
+# Builds the Linux packages and publishes them to a GitHub Release.
+#
+# This exists so releases do not depend on having a Linux machine to hand.
+# Push a tag and the .deb, .rpm and AppImage appear on the Releases page.
+#
+#   git tag v0.1.0
+#   git push origin v0.1.0
+#
+# `workflow_dispatch` builds the same artefacts without publishing, which is
+# the safe way to check the packaging works before committing to a tag.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write # required to create the release and upload assets
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    name: Build Linux packages
+    # Pinned to 22.04 deliberately. Tauri v2 needs webkit2gtk 4.1, and glibc
+    # is backwards- but not forwards-compatible: a binary built against a
+    # newer glibc will not start on an older distribution. Building on the
+    # oldest supported runner gives the widest install base.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libayatana-appindicator3-dev \
+            libssl-dev \
+            pkg-config \
+            file \
+            rpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # Keep this cache separate from the CI job's: that one builds tests
+          # and lints, this one builds an optimised binary, and sharing the
+          # key would mean constant eviction between them.
+          key: release
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Confirm the version in tauri.conf.json matches the tag being built.
+      # Without this it is easy to ship a v0.2.0 tag containing packages named
+      # 0.1.0, which is confusing and hard to undo once published.
+      - name: Check version matches tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          conf=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          if [ "$tag" != "$conf" ]; then
+            echo "::error::Tag is v${tag} but tauri.conf.json says ${conf}."
+            echo "Update the version in tauri.conf.json and Cargo.toml, then retag."
+            exit 1
+          fi
+          echo "Version ${conf} matches tag."
+
+      - name: Build packages
+        # `tauri build` runs the frontend build first via beforeBuildCommand.
+        # Calling the CLI directly rather than through the package script,
+        # because with-rust.sh assumes a local rustup install.
+        run: pnpm --filter openlogi-desktop exec tauri build
+
+      # The bundler writes each format to its own directory. Collect them into
+      # one place so the upload step does not need to know the layout.
+      - name: Collect artefacts
+        run: |
+          mkdir -p dist
+          bundle=target/release/bundle
+          find "$bundle" -type f \
+            \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) \
+            -exec cp {} dist/ \;
+
+          # Fail loudly if the bundler produced nothing. Without this the job
+          # would go on to publish an empty release, which is far harder to
+          # notice than a failed build.
+          if [ -z "$(ls -A dist)" ]; then
+            echo "::error::No packages were produced. Expected .deb, .rpm and AppImage under ${bundle}."
+            find "$bundle" -type f | head -50
+            exit 1
+          fi
+
+          echo "Built:"
+          ls -lh dist/
+
+      # Checksums let people verify a download, and cost nothing to produce.
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      # Always uploaded, so a workflow_dispatch run is still useful for
+      # testing the packaging without publishing anything.
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openlogi-linux-packages
+          path: dist/
+          retention-days: 14
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          draft: true # reviewed and published by hand
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            **Debian / Ubuntu**
+            ```bash
+            sudo apt install ./openlogi_${{ github.ref_name }}_amd64.deb
+            ```
+
+            **Fedora / RHEL**
+            ```bash
+            sudo dnf install ./openlogi-*.x86_64.rpm
+            ```
+
+            **Any distribution (AppImage)**
+            ```bash
+            chmod +x OpenLogi_*.AppImage
+            ./OpenLogi_*.AppImage
+            ```
+
+            > The AppImage does not run the post-install step, so udev rules
+            > are not installed automatically. Run
+            > `sudo ./scripts/install-udev-rules.sh` from the repository once,
+            > then log out and back in.
+
+            After installing from a package, **log out and back in** — group
+            membership only applies to new sessions.
+
+            Verify a download against `SHA256SUMS`:
+            ```bash
+            sha256sum -c SHA256SUMS --ignore-missing
+            ```

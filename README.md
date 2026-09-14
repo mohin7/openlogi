@@ -3,8 +3,9 @@
 A Linux alternative to Logitech Options+ — configure Logitech mice and
 keyboards natively, without proprietary software, and without `sudo`.
 
-> Status: **early.** The HID++ protocol layer and a hardware probe are working.
-> The desktop app is not built yet.
+> Status: **early.** The HID++ protocol layer, the hardware probe and the
+> desktop app are working. Profile persistence and per-application profile
+> switching are designed but not yet implemented.
 
 ## Quick start
 
@@ -28,6 +29,7 @@ git clone <repo> && cd openlogi
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Releasing](docs/releasing.md)
 
 ## Licence
 

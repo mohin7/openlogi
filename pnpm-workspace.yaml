@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+
+# pnpm blocks package postinstall scripts by default. Only these two need to
+# run: esbuild fetches its native binary, and vue-demi picks the Vue 3 shim
+# that Pinia imports. Everything else stays blocked.
+onlyBuiltDependencies:
+  - esbuild
+  - vue-demi
+ignoredBuiltDependencies: []
+allowBuilds:
+  vue-demi: set this to true or false

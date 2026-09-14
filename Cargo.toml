@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/hidpp",
+    "crates/button-engine",
+    "crates/logi-probe",
+    "apps/desktop/src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/mohin/openlogi"
+
+[workspace.dependencies]
+# Pure-Rust hidraw backend: no libudev, no C toolchain, no system deps.
+# Keeps AppImage and CI builds hermetic. Swap to "linux-static-hidraw" if
+# you ever need the upstream C implementation.
+hidapi = { version = "2.6", default-features = false, features = ["linux-native-basic-udev"] }
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = { version = "1", features = ["derive"] }

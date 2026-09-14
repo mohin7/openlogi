@@ -1,0 +1,36 @@
+# OpenLogi — access to Logitech HID++ endpoints and uinput without sudo.
+#
+# FILENAME MATTERS. systemd ships /usr/lib/udev/rules.d/73-seat-late.rules,
+# which contains:
+#
+#     TAG=="uaccess", ENV{MAJOR}!="", RUN{builtin}+="uaccess"
+#
+# udev evaluates rule files in lexical order, so a file numbered above 73 sets
+# TAG+="uaccess" *after* the builtin that consumes it has already run, and the
+# ACL is silently never applied. This file must stay below 73.
+#
+# Why uaccess at all: /dev/hidraw* defaults to 0600 root:root because raw HID
+# access is keylogger-grade. uaccess makes systemd-logind grant an ACL to the
+# user at the active physical seat, and revoke it at logout — access follows
+# the session instead of being permanent group membership.
+
+# --- Logitech devices and receivers on USB -----------------------------------
+# Covers Unifying, Bolt, Lightspeed and directly cabled devices.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", TAG+="uaccess", MODE="0660", GROUP="plugdev"
+
+# --- Logitech devices over Bluetooth -----------------------------------------
+# Bluetooth HID devices have no USB idVendor attribute; the vendor appears in
+# the HID device path as uppercase hex, e.g. 0005:0000046D:0000B02A.
+KERNEL=="hidraw*", KERNELS=="*:0000046D:*", TAG+="uaccess", MODE="0660", GROUP="plugdev"
+
+# --- uinput -------------------------------------------------------------------
+# Remapped buttons, macros and gestures are delivered by synthesising events
+# through /dev/uinput.
+#
+# uinput deliberately does NOT use uaccess: it is a misc device with no seat
+# assignment, so logind will not ACL it. The usual advice is to join the
+# "input" group, but that grants *read* access to every /dev/input/event*
+# device — i.e. the ability to log every keystroke on the system. OpenLogi only
+# needs to *write* to uinput, so we use a dedicated group that conveys exactly
+# that one capability and nothing else.
+KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", MODE="0660", GROUP="openlogi"

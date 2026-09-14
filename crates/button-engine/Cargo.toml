@@ -1,0 +1,13 @@
+[package]
+name = "button-engine"
+description = "Turns diverted Logitech button events into synthesised Linux input"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+evdev = "0.12"
+thiserror.workspace = true
+tracing.workspace = true
+serde = { workspace = true }

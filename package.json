@@ -1,0 +1,18 @@
+{
+  "name": "openlogi",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.20.0",
+  "scripts": {
+    "dev": "pnpm --filter openlogi-desktop dev",
+    "build": "pnpm --filter openlogi-desktop build",
+    "preview": "pnpm --filter openlogi-desktop preview",
+    "typecheck": "pnpm --filter openlogi-desktop exec vue-tsc --noEmit",
+    "probe": "./scripts/with-rust.sh cargo run --release -p logi-probe --",
+    "watch": "./scripts/with-rust.sh cargo run --release -p logi-probe -- watch 30",
+    "rust:lint": "./scripts/with-rust.sh cargo clippy --all-targets -- -D warnings",
+    "rust:test": "./scripts/with-rust.sh cargo test",
+    "app": "pnpm --filter openlogi-desktop tauri:dev",
+    "app:build": "pnpm --filter openlogi-desktop tauri:build"
+  }
+}

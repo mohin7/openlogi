@@ -1,0 +1,17 @@
+[package]
+name = "hidpp"
+description = "Logitech HID++ 1.0/2.0 protocol implementation over Linux hidraw"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+hidapi.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+serde = { workspace = true, optional = true }
+
+[features]
+default = []
+serde = ["dep:serde"]

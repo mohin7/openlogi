@@ -1,0 +1,18 @@
+[package]
+name = "logi-probe"
+description = "Dump everything OpenLogi can learn about the attached Logitech hardware"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "logi-probe"
+path = "src/main.rs"
+
+[dependencies]
+hidpp = { path = "../hidpp" }
+hidapi.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+libc = "0.2"

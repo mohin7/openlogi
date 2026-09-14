@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "OpenLogi",
+  "version": "0.1.0",
+  "identifier": "dev.openlogi.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "OpenLogi",
+        "width": 1120,
+        "height": 760,
+        "minWidth": 880,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true,
+        "label": "main"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "appimage",
+      "deb",
+      "rpm"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/lib/udev/rules.d/70-openlogi.rules": "../../../scripts/70-openlogi.rules"
+        },
+        "postInstallScript": "scripts/postinst.sh"
+      },
+      "rpm": {
+        "files": {
+          "/usr/lib/udev/rules.d/70-openlogi.rules": "../../../scripts/70-openlogi.rules"
+        },
+        "postInstallScript": "scripts/postinst.sh"
+      }
+    },
+    "shortDescription": "Configure Logitech devices on Linux",
+    "longDescription": "A native Linux alternative to Logitech Options+. Reads battery, firmware and DPI over the HID++ protocol, and remaps buttons through uinput. No proprietary software and no root privileges after installation.",
+    "category": "Utility"
+  },
+  "mainBinaryName": "openlogi"
+}

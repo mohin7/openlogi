@@ -1,0 +1,215 @@
+@import 'tailwindcss';
+
+/* Explicit class-based dark mode: the app has a three-state theme setting
+   (light / dark / system), so the media query alone is not enough. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', -apple-system, 'SF Pro Display', 'Segoe UI', Roboto,
+    system-ui, sans-serif;
+
+  /* ---- Type scale -------------------------------------------------------
+     A fixed scale, not ad-hoc pixel values. Sizes are paired with their line
+     height and tracking so a heading always looks like a heading, whoever
+     writes it. Optical tracking tightens as size grows, which is what keeps
+     large text from looking loose. */
+  --text-display: 1.75rem;      /* 28px — page titles */
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.021em;
+  --text-display--font-weight: 600;
+
+  --text-title: 1.0625rem;      /* 17px — card titles */
+  --text-title--line-height: 1.35;
+  --text-title--letter-spacing: -0.011em;
+  --text-title--font-weight: 600;
+
+  --text-body: 0.875rem;        /* 14px — primary reading size */
+  --text-body--line-height: 1.55;
+
+  --text-label: 0.8125rem;      /* 13px — controls, list rows */
+  --text-label--line-height: 1.45;
+
+  --text-caption: 0.75rem;      /* 12px — secondary metadata */
+  --text-caption--line-height: 1.4;
+
+  --text-overline: 0.6875rem;   /* 11px — section headers */
+  --text-overline--line-height: 1.4;
+  --text-overline--letter-spacing: 0.06em;
+  --text-overline--font-weight: 600;
+
+  /* ---- Brand ------------------------------------------------------------
+     One accent, used only for the single most important thing in a view. */
+  --color-brand-50: #e8f8ef;
+  --color-brand-100: #c6eed9;
+  --color-brand-200: #8fdcb6;
+  --color-brand-300: #52c78f;
+  --color-brand-400: #1cb26e;
+  --color-brand-500: #00a651;
+  --color-brand-600: #009149;
+  --color-brand-700: #00763c;
+  --color-brand-800: #005c30;
+  --color-brand-900: #004425;
+
+  --radius-card: 0.875rem;
+  --radius-panel: 1.125rem;
+
+  /* ---- Motion -----------------------------------------------------------
+     Two curves and three durations for the whole app. A shared rhythm is what
+     makes an interface feel like one product rather than many. */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+}
+
+/* ---- Semantic surfaces --------------------------------------------------
+   Components reference roles, never raw colour. Light and dark are authored
+   as a pair so contrast is deliberate in both, not inherited from one. */
+:root {
+  --surface: #ffffff;
+  --surface-sunken: #f7f7f6;
+  --surface-raised: #ffffff;
+  --surface-hover: #f2f2f0;
+  --border: #e6e6e2;
+  --border-strong: #d5d5d0;
+  --text: #161614;
+  --text-muted: #6b6b66;
+  --text-subtle: #9a9a94;
+
+  /* A four-step elevation scale. Shadows are tinted slightly warm and paired
+     with a hairline border, which is what keeps cards crisp on white rather
+     than looking like they are floating in fog. */
+  --elev-1: 0 1px 2px rgb(20 20 16 / 0.05);
+  --elev-2: 0 1px 2px rgb(20 20 16 / 0.05), 0 4px 12px -4px rgb(20 20 16 / 0.09);
+  --elev-3: 0 1px 3px rgb(20 20 16 / 0.07), 0 12px 28px -10px rgb(20 20 16 / 0.16);
+  --elev-4: 0 2px 6px rgb(20 20 16 / 0.09), 0 28px 64px -20px rgb(20 20 16 / 0.30);
+  color-scheme: light;
+}
+
+.dark {
+  --surface: #191917;
+  --surface-sunken: #121211;
+  --surface-raised: #201f1d;
+  --surface-hover: #272724;
+  --border: #2c2c28;
+  --border-strong: #3d3d38;
+  --text: #f2f2f0;
+  --text-muted: #a3a39c;
+  --text-subtle: #73736d;
+
+  /* Dark surfaces get lighter as they rise, because shadow alone reads as
+     nothing on a dark ground. */
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+  --elev-3: 0 1px 3px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
+  --elev-4: 0 2px 6px rgb(0 0 0 / 0.6), 0 28px 64px -20px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  /* cv11 gives Inter a single-storey 'a'; ss01 rounds the quotes. Tabular
+     numerals stop battery and DPI readouts jittering as digits change. */
+  font-feature-settings: 'cv11', 'ss01';
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Colour-only cross-fade on theme change; layout properties are untouched so
+   nothing reflows mid-transition. */
+.theme-transition,
+.theme-transition * {
+  transition:
+    background-color var(--duration-slow) var(--ease-out-quint),
+    border-color var(--duration-slow) var(--ease-out-quint),
+    color var(--duration-slow) var(--ease-out-quint) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-subtle);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* One focus treatment for the whole app, so keyboard users get a single
+   consistent signal rather than per-component guesswork. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 7px;
+}
+
+/* Entrance animations. Used sparingly — one or two elements per view. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise var(--duration-slow) var(--ease-out-quint) both;
+}
+
+/* Staggered list entrance: 40ms apart reads as a sequence without feeling
+   slow. Capped at 8 so a long list never crawls in. */
+.stagger > * {
+  animation: rise var(--duration-slow) var(--ease-out-quint) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(n + 7) { animation-delay: 240ms; }
+
+/* Pressable feedback that never shifts layout. */
+.pressable {
+  transition:
+    transform var(--duration-fast) var(--ease-out-quint),
+    background-color var(--duration-fast) var(--ease-out-quint),
+    border-color var(--duration-fast) var(--ease-out-quint),
+    box-shadow var(--duration-base) var(--ease-out-quint);
+}
+.pressable:active {
+  transform: scale(0.98);
+}
